@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/33732250/README.md)
+[README_nuevo.md](https://github.com/user-attachments/files/33732469/README_nuevo.md)
 # Contador bidireccional de 9 bits con signo en FPGA (DE10-Lite)
 
 Contador ascendente-descendente de 9 bits con signo, descrito en Verilog e implementado en la tarjeta **Terasic DE10-Lite** (FPGA Intel/Altera MAX 10, `10M50DAF484C7G`). Recorre el intervalo completo de complemento a dos, de **−256 a 255**, y muestra el valor en decimal en los displays de siete segmentos, con el signo negativo en `HEX3`.
@@ -14,6 +14,57 @@ Proyecto de la materia de Sistemas Embebidos, Universidad de las Américas Puebl
 - Interruptores de velocidad y dirección con sincronizadores de dos flip-flops.
 - Visualización en decimal: unidades en `HEX0`, decenas en `HEX1`, centenas en `HEX2` y guion en `HEX3` si el número es negativo.
 - LEDs indicadores de estado, velocidad y signo.
+
+## Diagrama de bloques
+
+Todos los módulos usan el reloj de 50 MHz y el reinicio, que no se dibujaron para simplificar el diagrama.
+
+```mermaid
+flowchart LR
+    KEY1["KEY1<br/>BTN_PAUSE_N"]
+    SWS["SW0, SW1, SW2<br/>SW_FREQ, SW_INC, SW_DEC"]
+
+    subgraph TOP["TOP_contador9"]
+        direction LR
+        PB["pulsoBoton_v1<br/>antirrebote"]
+        SYNC["Sincronizadores<br/>2 flip-flops"]
+        TICK["tickGen_1<br/>1 s / 100 ms"]
+        FSM["contadorFSM_9b<br/>estado y contador"]
+        DISP["displaySigno9b<br/>decimal y signo"]
+    end
+
+    HEX["HEX0 a HEX3"]
+    LEDS["LEDR"]
+
+    KEY1 --> PB
+    SWS --> SYNC
+    PB -->|"pause_pulse"| FSM
+    SYNC -->|"inc, dec"| FSM
+    SYNC -->|"speed_sync"| TICK
+    FSM -->|"running"| TICK
+    TICK -->|"tick"| FSM
+    FSM -->|"count"| DISP
+    DISP --> HEX
+    FSM -->|"state"| LEDS
+```
+
+## Diagrama de estados
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    state "PAUSA" as PAUSA
+    state "ASCENDENTE (+1 por tick)" as ASC
+    state "DESCENDENTE (-1 por tick)" as DESC
+
+    [*] --> PAUSA : RESET, count = 0
+    PAUSA --> ASC : SW_INC
+    PAUSA --> DESC : SW_DEC sin SW_INC
+    ASC --> PAUSA : pulso de pausa
+    DESC --> PAUSA : pulso de pausa
+    ASC --> DESC : SW_DEC sin SW_INC
+    DESC --> ASC : SW_INC
+```
 
 ## Estructura del repositorio
 
