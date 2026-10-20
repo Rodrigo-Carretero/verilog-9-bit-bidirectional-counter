@@ -1,0 +1,4 @@
+QUARTUS_VERSION = "21.1"
+DATE = "12:36:57  October 01, 2026"
+
+PROJECT_REVISION = "contador_9bits"
